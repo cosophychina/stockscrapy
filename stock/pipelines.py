@@ -13,10 +13,11 @@ class StockPipeline(object):
 class StockMysqlPipelime(MysqlPipeline):
 	"""docstring for StockMysqlPipelime"""
 	def process_item(self, item, spider):
-		sql = ""
-		super().process_item(item, spider, [sql])
-		pass
-		
+		sqlinfo = ""
+		sqlquotes = ""
+		sqldailys = ""
+		super().process_item(item, spider, [sqlinfo, sqlquotes, sqldailys])
+
 
 class MysqlPipeline(object):
     ''' MySQL数据处理类 '''
