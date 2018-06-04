@@ -10,13 +10,14 @@ class StockPipeline(object):
     def process_item(self, item, spider):
         return item
 
-class StockMysqlPipelime(MysqlPipeline):
+class StockMysqlPipeline():
 	"""docstring for StockMysqlPipelime"""
 	def process_item(self, item, spider):
 		sqlinfo = ""
 		sqlquotes = ""
 		sqldailys = ""
-		super().process_item(item, spider, [sqlinfo, sqlquotes, sqldailys])
+		print(item)
+		# super().process_item(item, spider, [sqlinfo, sqlquotes, sqldailys])
 
 
 class MysqlPipeline(object):
