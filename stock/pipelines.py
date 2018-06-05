@@ -18,7 +18,7 @@ class StockConsolePipeline():
 		
 
 class MysqlPipeline(object):
-    ''' MySQL数据处理类 '''
+    ''' Base MysqlPipeline to store stock data. '''
     def __init__(self,host,database,user,password,port):
         self.host = host
         self.database = database
@@ -57,7 +57,7 @@ class MysqlPipeline(object):
                 self.db.commit()
 
             if len(oneTransactionSqls) > 0:
-                #execute all opers for one transaction
+                #execute all opers within one transaction
                 with self.db.cursor() as cursor:             
                     try:
                         for sql in oneTransactionSqls:
@@ -75,7 +75,8 @@ class MysqlPipeline(object):
 
 
 class StockMysqlPipeline(MysqlPipeline):
-    """docstring for StockMysqlPipelime"""
+    """store stock data to mysql database, including StockInfo, StockQuotes and StockDailys."""
+    """StockQuotes and StockDailys data to be updated at each crawl."""
     def process_item(self, item, spider):
         if item['code'] is None:
             return item;

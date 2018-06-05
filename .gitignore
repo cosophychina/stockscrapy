@@ -1,0 +1,3 @@
+stock/__pycache__
+stock/spiders/__pycache__
+*.pyc
