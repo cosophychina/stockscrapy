@@ -14,6 +14,12 @@ BOT_NAME = 'stock'
 SPIDER_MODULES = ['stock.spiders']
 NEWSPIDER_MODULE = 'stock.spiders'
 
+#mysql dabase configurations
+MYSQL_HOST = '127.0.0.1'
+MYSQL_DATABASE = 'stocks'
+MYSQL_USER = 'root'
+MYSQL_PASS = '1'
+MYSQL_PORT = 3306
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'stock (+http://www.yourdomain.com)'
@@ -66,6 +72,7 @@ ROBOTSTXT_OBEY = True
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
    'stock.pipelines.StockMysqlPipeline': 300,
+   #'stock.pipelines.StockConsolePipeline': 301
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
