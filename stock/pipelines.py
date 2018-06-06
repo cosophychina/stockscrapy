@@ -90,17 +90,35 @@ class StockMysqlPipeline(MysqlPipeline):
 
         sqlquotes = "INSERT INTO StockQuotes(code,trade_date,time,open,high,low,last,close,volume," + \
                     "turnover,turnover_rate,volume_ratio,limit_up,limit_down,preclose,flow_equity,total_equity) " + \
-                    "VALUES('%s','%s','%s',%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f) ON DUPLICATE KEY UPDATE " + \
+                    "VALUES('%s','%s','%s',{},{},{},%.2f,{},%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f) ON DUPLICATE KEY UPDATE " + \
                     "trade_date=VALUES(trade_date),time=VALUES(time),open=VALUES(open),high=VALUES(high),low=VALUES(low),last=VALUES(last)," + \
                     "close=VALUES(close),volume=VALUES(volume),turnover=VALUES(turnover),turnover_rate=VALUES(turnover_rate)," + \
                     "volume_ratio=VALUES(volume_ratio),limit_up=VALUES(limit_up),limit_down=VALUES(limit_down),preclose=VALUES(preclose)," + \
                     "flow_equity=VALUES(flow_equity),total_equity=VALUES(total_equity)"
+        #if has value, format normally; else format 'NULL'
+        sqlquotes = sqlquotes.format(('%.2f' if item['open'] else '%s'),('%.2f' if item['high'] else '%s'),
+                                        ('%.2f' if item['low'] else '%s'),('%.2f' if item['close'] else '%s'))
+
+
+        sqldailys = "INSERT INTO StockDailys(code,open,high,low,close,volume,turnover,trade_date) VALUES('%s',{},{},{},{},%.2f,%.2f,'%s') " + \
+                        "ON DUPLICATE KEY UPDATE open=VALUES(open),high=VALUES(high),low=VALUES(low),close=VALUES(close),volume=VALUES(volume)," + \
+                        "turnover=VALUES(turnover)" 
+        sqldailys = sqldailys.format(('%.2f' if item['open'] else '%s'),('%.2f' if item['high'] else '%s'),
+                                        ('%.2f' if item['low'] else '%s'),('%.2f' if item['close'] else '%s'))  
+
+        #set database null type
+        if not item['open']:
+            item['open'] = 'NULL'
+        if not item['high']:
+            item['high'] = 'NULL'
+        if not item['low']:
+            item['low'] = 'NULL'
+        if not item['close']:
+            item['close'] = 'NULL'
 
         sqlquotes = sqlquotes % (item['code'], item['trade_date'], item['time'], item['open'], item['high'], item['low'], item['last'], 
-                            item['close'], item['volume'], item['turnover'], item['turnover_rate'], item['volume_ratio'], item['limit_up'], 
-                            item['limit_down'], item['preclose'], item['flow_equity'], item['total_equity'])
-
-        sqldailys = "INSERT INTO StockDailys(code,open,high,low,close,volume,turnover,trade_date) VALUES('%s',%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,'%s')" \
-                        % (item['code'], item['open'], item['high'], item['low'], item['close'], item['volume'], item['turnover'], item['trade_date'])
+                    item['close'], item['volume'], item['turnover'], item['turnover_rate'], item['volume_ratio'], item['limit_up'], 
+                    item['limit_down'], item['preclose'], item['flow_equity'], item['total_equity'])              
+        sqldailys = sqldailys % (item['code'], item['open'], item['high'], item['low'], item['close'], item['volume'], item['turnover'], item['trade_date'])
         
         super().process_item(item, spider, [sqlinfo, sqlquotes, sqldailys])

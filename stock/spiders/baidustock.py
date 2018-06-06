@@ -6,10 +6,38 @@ from stock.items import StockItem
 class BaidustockSpider(scrapy.Spider):
     name = 'baidustock'
     #start_urls = ['http://quote.eastmoney.com/stocklist.html']
-    start_urls = ['http://gupiao.baidu.com/stock/sz002292.html',
-    	'http://gupiao.baidu.com/stock/sz002786.html',
-    	'http://gupiao.baidu.com/stock/sz000520.html',
-    	'http://gupiao.baidu.com/stock/sh603901.html']
+    # start_urls = ['http://gupiao.baidu.com/stock/sz002292.html',
+    # 	'http://gupiao.baidu.com/stock/sz002786.html',
+    # 	'http://gupiao.baidu.com/stock/sz000520.html',
+    # 	'http://gupiao.baidu.com/stock/sh603901.html']
+    start_urls = []
+    base_url = "http://gupiao.baidu.com/stock/%s.html"
+
+    def __init__(self, stocks = None, *args, **kwargs):
+    	super().__init__(*args, **kwargs)
+    	if stocks:
+    		stocks = stocks.split(',')
+    		for stk in stocks:
+    			if not stk.startswith('s'):
+    				if stk.startswith('6'):
+    					stk = 'sh' + stk
+    				else:
+    					stk = 'sz' + stk
+    			self.start_urls.append(self.base_url % stk)
+    	
+
+    def start_requests(self):
+        stocks = self.settings.getlist('STOCK_LIST')
+        if stocks:
+        	for stk in stocks:
+        		if stk.startswith('6'):
+        			stk = 'sh' + stk
+        		else:
+        			stk = 'sz' + stk
+        		yield scrapy.Request(self.base_url % stk, callback = self.parse)
+
+        for url in self.start_urls:
+        	yield scrapy.Request(url, callback = self.parse)
 
     def parse(self, response):
     	return self.parse_stock(response)
@@ -26,7 +54,9 @@ class BaidustockSpider(scrapy.Spider):
 	        state = stockInfo.css('span')[1]
 	        sItem['trade_date'] = state.re_first("\d{4}-\d{2}-\d{2}")
 	        sItem['time'] = state.re_first("\d{2}:\d{2}:\d{2}")
-	        sItem['close'] = float(stockInfo.css('._close::text').extract_first())
+	        txtState = state.re_first("\">(.*?) ")
+	        print(txtState)
+	        sItem['close'] = float(stockInfo.css('._close::text').extract_first()) if txtState == '已收盘' else None
 	        sItem['last'] = float(stockInfo.css('strong::text').extract_first())
 	        valueList = stockInfo.css('dd')
 	        sItem['open'] = float(valueList[0].css('::text').extract_first())

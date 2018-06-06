@@ -21,6 +21,8 @@ MYSQL_USER = 'root'
 MYSQL_PASS = '1'
 MYSQL_PORT = 3306
 
+STOCK_LIST = '002292,002786'
+
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'stock (+http://www.yourdomain.com)'
 
