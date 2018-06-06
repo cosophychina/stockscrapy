@@ -73,6 +73,12 @@ class MysqlPipeline(object):
         if self.db:
             self.db.close()
 
+''' transform string to float type '''
+def getFloat(s, default):
+    try:
+        return float(s)
+    except:
+        return default
 
 class StockMysqlPipeline(MysqlPipeline):
     """store stock data to mysql database, including StockInfo, StockQuotes and StockDailys."""
@@ -80,7 +86,23 @@ class StockMysqlPipeline(MysqlPipeline):
     def process_item(self, item, spider):
         if item['code'] is None:
             return item;
-            
+
+        item['open'] = getFloat(item['open'], 'NULL')
+        item['high'] = getFloat(item['high'], 'NULL')
+        item['low'] = getFloat(item['low'], 'NULL')
+        item['close'] = getFloat(item['close'], 'NULL')
+        item['pe'] = getFloat(item['pe'], 'NULL')
+        item['volume'] = getFloat(item['volume'], 'NULL')
+        item['last'] = getFloat(item['last'], 'NULL')
+        item['turnover'] = getFloat(item['turnover'], 'NULL')
+        item['turnover_rate'] = getFloat(item['turnover_rate'], 'NULL')
+        item['volume_ratio'] = getFloat(item['volume_ratio'], 'NULL')
+        item['limit_up'] = getFloat(item['limit_up'], 'NULL')
+        item['limit_down'] = getFloat(item['limit_down'], 'NULL')
+        item['preclose'] = getFloat(item['preclose'], 'NULL')
+        item['flow_equity'] = getFloat(item['flow_equity'], 'NULL')
+        item['total_equity'] = getFloat(item['total_equity'], 'NULL')
+
         if(item['code'][0] == '6'):
             market = 'SH'
         else:
@@ -90,36 +112,31 @@ class StockMysqlPipeline(MysqlPipeline):
                         % (item['code'], item['name'], market, item['code']+'.'+market)
 
         sqlquotes = "INSERT INTO StockQuotes(code,trade_date,time,open,high,low,last,close,volume," + \
-                    "turnover,turnover_rate,volume_ratio,limit_up,limit_down,preclose,flow_equity,total_equity) " + \
-                    "VALUES('%s','%s','%s',{},{},{},%.2f,{},%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f) ON DUPLICATE KEY UPDATE " + \
+                    "turnover,turnover_rate,volume_ratio,limit_up,limit_down,preclose,flow_equity,total_equity,pe) " + \
+                    "VALUES('%s','%s','%s',{},{},{},%.2f,{},%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,{}) ON DUPLICATE KEY UPDATE " + \
                     "trade_date=VALUES(trade_date),time=VALUES(time),open=VALUES(open),high=VALUES(high),low=VALUES(low),last=VALUES(last)," + \
                     "close=VALUES(close),volume=VALUES(volume),turnover=VALUES(turnover),turnover_rate=VALUES(turnover_rate)," + \
                     "volume_ratio=VALUES(volume_ratio),limit_up=VALUES(limit_up),limit_down=VALUES(limit_down),preclose=VALUES(preclose)," + \
-                    "flow_equity=VALUES(flow_equity),total_equity=VALUES(total_equity)"
+                    "flow_equity=VALUES(flow_equity),total_equity=VALUES(total_equity),pe=VALUES(pe)"
         #if has value, format normally; else format 'NULL'
-        sqlquotes = sqlquotes.format(('%.2f' if item['open'] else '%s'),('%.2f' if item['high'] else '%s'),
-                                        ('%.2f' if item['low'] else '%s'),('%.2f' if item['close'] else '%s'))
+        sqlquotes = sqlquotes.format(('%.2f' if item['open'] != 'NULL' else '%s'),('%.2f' if item['high'] != 'NULL' else '%s'),
+                                        ('%.2f' if item['low'] != 'NULL' else '%s'),('%.2f' if item['close'] != 'NULL' else '%s'),
+                                        ('%.2f' if item['pe'] != 'NULL' else '%s')) 
 
 
-        sqldailys = "INSERT INTO StockDailys(code,open,high,low,close,volume,turnover,trade_date) VALUES('%s',{},{},{},{},%.2f,%.2f,'%s') " + \
-                        "ON DUPLICATE KEY UPDATE open=VALUES(open),high=VALUES(high),low=VALUES(low),close=VALUES(close),volume=VALUES(volume)," + \
-                        "turnover=VALUES(turnover)" 
-        sqldailys = sqldailys.format(('%.2f' if item['open'] else '%s'),('%.2f' if item['high'] else '%s'),
-                                        ('%.2f' if item['low'] else '%s'),('%.2f' if item['close'] else '%s'))  
+        sqldailys = "INSERT INTO StockDailys(code,open,high,low,close,volume,turnover,pe,total_equity,trade_date) " + \
+                    "VALUES('%s',{},{},{},{},%.2f,%.2f,{},%.2f,'%s') " + \
+                    "ON DUPLICATE KEY UPDATE open=VALUES(open),high=VALUES(high),low=VALUES(low),close=VALUES(close),volume=VALUES(volume)," + \
+                    "turnover=VALUES(turnover),pe=VALUES(pe),total_equity=VALUES(total_equity)" 
+        sqldailys = sqldailys.format(('%.2f' if item['open'] != 'NULL' else '%s'),('%.2f' if item['high'] != 'NULL' else '%s'),
+                                        ('%.2f' if item['low'] != 'NULL' else '%s'),('%.2f' if item['close'] != 'NULL' else '%s'),
+                                        ('%.2f' if item['pe'] != 'NULL' else '%s'))  
 
-        #set database null type
-        if not item['open']:
-            item['open'] = 'NULL'
-        if not item['high']:
-            item['high'] = 'NULL'
-        if not item['low']:
-            item['low'] = 'NULL'
-        if not item['close']:
-            item['close'] = 'NULL'
 
         sqlquotes = sqlquotes % (item['code'], item['trade_date'], item['time'], item['open'], item['high'], item['low'], item['last'], 
                     item['close'], item['volume'], item['turnover'], item['turnover_rate'], item['volume_ratio'], item['limit_up'], 
-                    item['limit_down'], item['preclose'], item['flow_equity'], item['total_equity'])              
-        sqldailys = sqldailys % (item['code'], item['open'], item['high'], item['low'], item['close'], item['volume'], item['turnover'], item['trade_date'])
+                    item['limit_down'], item['preclose'], item['flow_equity'], item['total_equity'], item['pe'])              
+        sqldailys = sqldailys % (item['code'], item['open'], item['high'], item['low'], item['close'], item['volume'], 
+                    item['turnover'], item['pe'], item['total_equity'], item['trade_date'])
         
         super().process_item(item, spider, [sqlinfo, sqlquotes, sqldailys])

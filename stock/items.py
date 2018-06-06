@@ -28,4 +28,5 @@ class StockItem(scrapy.Item):
     preclose = scrapy.Field()
     flow_equity = scrapy.Field()
     total_equity = scrapy.Field()
+    pe = scrapy.Field()
 
