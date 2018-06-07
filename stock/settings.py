@@ -21,7 +21,7 @@ MYSQL_USER = 'root'
 MYSQL_PASS = '1'
 MYSQL_PORT = 3306
 
-STOCK_LIST = '002292,002786'
+STOCK_LIST = '002292,002786,000520,603901'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'stock (+http://www.yourdomain.com)'
@@ -73,8 +73,9 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'stock.pipelines.StockMysqlPipeline': 300,
-   #'stock.pipelines.StockConsolePipeline': 301
+   'stock.pipelines.StockPreProcPipeline': 300,
+   'stock.pipelines.StockMysqlPipeline': 301,
+   'stock.pipelines.StockConsolePipeline': 302
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

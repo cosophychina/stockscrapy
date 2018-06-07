@@ -10,6 +10,7 @@ import scrapy
 
 class StockItem(scrapy.Item):
     # define the fields for your item here like:
+    market = scrapy.Field()
     code = scrapy.Field()
     name = scrapy.Field()
     trade_date = scrapy.Field()

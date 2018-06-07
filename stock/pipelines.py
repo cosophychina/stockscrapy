@@ -11,7 +11,7 @@ class StockPipeline(object):
     def process_item(self, item, spider):
         return item
 
-class StockConsolePipeline():
+class StockConsolePipeline(object):
 	"""docstring for StockMysqlPipelime"""
 	def process_item(self, item, spider):
 		print(item)
@@ -80,12 +80,17 @@ def getFloat(s, default):
     except:
         return default
 
-class StockMysqlPipeline(MysqlPipeline):
-    """store stock data to mysql database, including StockInfo, StockQuotes and StockDailys."""
-    """StockQuotes and StockDailys data to be updated at each crawl."""
+"""
+pipeline to preproc the item's fields before storing
+"""
+class StockPreProcPipeline(object):
+    #process
     def process_item(self, item, spider):
-        if item['code'] is None:
-            return item;
+        
+        item['code'] = item.get('code', None)
+        item['name'] = item.get('name', '')
+        item['trade_date'] = item.get('trade_date', '')
+        item['time'] = item.get('time', '')
 
         item['open'] = getFloat(item['open'], 'NULL')
         item['high'] = getFloat(item['high'], 'NULL')
@@ -103,13 +108,23 @@ class StockMysqlPipeline(MysqlPipeline):
         item['flow_equity'] = getFloat(item['flow_equity'], 'NULL')
         item['total_equity'] = getFloat(item['total_equity'], 'NULL')
 
-        if(item['code'][0] == '6'):
-            market = 'SH'
-        else:
-            market = 'SZ'
+        if item['code']:
+            if(item['code'][0] == '6'):
+                item['market'] = 'SH'
+            else:
+                item['market'] = 'SZ'
+
+        return item
+
+class StockMysqlPipeline(MysqlPipeline):
+    """store stock data to mysql database, including StockInfo, StockQuotes and StockDailys."""
+    """StockQuotes and StockDailys data to be updated at each crawl."""
+    def process_item(self, item, spider):
+        if not (item['code'] and item['code'].isdigit()):
+            return item
 
         sqlinfo = "INSERT INTO StockInfo(code, name, market, symbol) VALUES('%s','%s','%s','%s')" \
-                        % (item['code'], item['name'], market, item['code']+'.'+market)
+                        % (item['code'], item['name'], item['market'], item['code'] + '.' + item['market'])
 
         sqlquotes = "INSERT INTO StockQuotes(code,trade_date,time,open,high,low,last,close,volume," + \
                     "turnover,turnover_rate,volume_ratio,limit_up,limit_down,preclose,flow_equity,total_equity,pe) " + \

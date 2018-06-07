@@ -55,8 +55,8 @@ class BaidustockSpider(scrapy.Spider):
             sItem['trade_date'] = state.re_first("\d{4}-\d{2}-\d{2}")
             sItem['time'] = state.re_first("\d{2}:\d{2}:\d{2}")
             txtState = state.re_first("\">(.*?) ")
-            print(txtState)
-            sItem['close'] = None if txtState == '开盘中' else stockInfo.css('._close::text').extract_first()
+            #print(txtState)
+            sItem['close'] = stockInfo.css('._close::text').extract_first() if txtState.endswith('盘') else None #已收盘, 未开盘
             sItem['last'] = stockInfo.css('strong::text').extract_first()
             valueList = stockInfo.css('dd')
             sItem['open'] = valueList[0].css('::text').extract_first()
